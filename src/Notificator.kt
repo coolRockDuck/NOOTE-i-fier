@@ -4,28 +4,24 @@ import java.lang.Exception
 
 const val KEY_ICON_PATH = "ICON_PATH"
 const val KEY_NOTES_PATH = "NOTES_PATH"
-const val KEY_MINIMAL_SPACE = "MINIMAL_SPACE"
-const val KEY_ADDITIONAL_SPACE = "ADDITIONAL_SPACE"
+const val KEY_MINIMAL_LENGTH = "MINIMAL_LENGTH"
 
 // path to default place where xpad is storing data
 val DEFAULT_NOTES_PATH = System.getProperty("user.home") + "/.config/xpad" // this can't be const
-const val DEFAULT_MINIMAL_SPACE = "5" // todo simplyfi that system
-const val DEFAULT_ADDI_SPACE_AMOUNT = "10"
+const val DEFAULT_MINIMAL_LENGTH = "10"
 
-val prop = getConf()
-val config = myProp()
+val prop = getUserProp()
+val config = getConfig()
 
-data class myProp constructor(
+data class getConfig constructor(
         val notesPath: String,
         val iconPath: String,
-        val minimalSpace: Int,
-        val additionalSpace: Int
+        val minimalLength: Int
 ) {
 
     constructor(): this(prop.getProperty(KEY_NOTES_PATH, DEFAULT_NOTES_PATH),
                         prop.getProperty(KEY_ICON_PATH),
-                        Integer.parseInt(prop.getProperty(KEY_MINIMAL_SPACE, DEFAULT_MINIMAL_SPACE)),
-                        Integer.parseInt(prop.getProperty(KEY_ADDITIONAL_SPACE, DEFAULT_ADDI_SPACE_AMOUNT)))
+                        Integer.parseInt(prop.getProperty(KEY_MINIMAL_LENGTH, DEFAULT_MINIMAL_LENGTH)))
 }
 
 fun main(args: Array<String>) {
@@ -49,7 +45,7 @@ fun main(args: Array<String>) {
     when {          // you can easily declare how flags change behavior of the script inside 'when'
         wantHelp -> {
             //TODO update instructions how to use this script
-            head = "Help";
+            head = "Help"
             content = arrayOf("Help",
                     "How to use: ",
                     "Flags:",
@@ -72,10 +68,10 @@ fun main(args: Array<String>) {
         }
     }
 
-    showNotifi(head, content, onlyInCommandLine)
+    showNotify(head, content.toMutableList(), onlyInCommandLine)
 }
 
-private fun getConf(): Properties {
+private fun getUserProp(): Properties {
     val prop = Properties()
 
     // this script is Linux only so using Path builder is useless because we know file that file name separator is '/'
@@ -87,8 +83,7 @@ private fun getConf(): Properties {
         with(prop) {
             setProperty(KEY_ICON_PATH, "CHANGE_ME")
             setProperty(KEY_NOTES_PATH, DEFAULT_NOTES_PATH)
-            setProperty(KEY_MINIMAL_SPACE, DEFAULT_MINIMAL_SPACE)
-            setProperty(KEY_ADDITIONAL_SPACE, DEFAULT_ADDI_SPACE_AMOUNT.length.toString())
+            setProperty(KEY_MINIMAL_LENGTH, DEFAULT_MINIMAL_LENGTH)
         }
 
         saveProperties(prop, confFile)
@@ -96,7 +91,6 @@ private fun getConf(): Properties {
         loadProperties(prop, confFile)
     }
 
-//    prop.toList().forEach { println(it) } // TESTING
     return prop
 }
 
@@ -124,7 +118,10 @@ private fun getNotesContent(path: String): Array<String> {
         }
 
         val content = file.readLines()
-        if (content[0].contains("TODO")) { // first line need to contains 'TODO'
+        if (content.isEmpty()) { continue }
+
+        if (content[0].contains("TODO", ignoreCase = true)) { // first line need to contains 'TODO'
+            if (content.size == 1) { return arrayOf("That's all :D") } // file contains only 'TODO'
             return content.subList(1, content.size).toTypedArray()
         }
     }
@@ -133,60 +130,50 @@ private fun getNotesContent(path: String): Array<String> {
             + "has been detected in path:\n" + path)
 }
 
-private fun showNotifi(head: String, body: Array<String>, onlyInCommandLine: Boolean = false) {
+private fun showNotify(header: String, content: MutableList<String>, onlyInCommandLine: Boolean = false) {
 
-    var lthLongestLine: Int = 0
-    body.forEach { line: String ->
+    var lthLongestLine = 0
+    content.forEach { line: String ->
         if (lthLongestLine < line.length) {
             lthLongestLine = line.length
         }
     }
 
     // adding extra length if needed so notification window won`t be too short
-    val miniLenght = config.minimalSpace
-    if (lthLongestLine < miniLenght && !onlyInCommandLine) {
-
-        val additionalSpace = " ".repeat(config.additionalSpace) //in space characters
-
-        body[0] = body[0] + additionalSpace
+    val miniLength = config.minimalLength
+    for (extraSpace: Int in 0..(miniLength - lthLongestLine)) {
+        content[0] = content[0] + " "
     }
 
-    var trueBody = ""
-    for (line in body) {
-        var copyOfLine = line // creates a copy so we can modify it
-
-        val isGoodLine = (copyOfLine != "" || copyOfLine != "\n")
+    var message = ""
+    for (line in content) {
+        val isGoodLine = (line != "" || line != "\n")
         if (!isGoodLine) { continue }
 
         if (line.startsWith("-")) { // we need to add space before '-' character
-            copyOfLine = " " + copyOfLine // so notify-send won't threat this as a flag
-        }
-
-        if (trueBody == "") { // we need to
-            trueBody = trueBody + copyOfLine + "\n"
+            message = message + " " + line + "\n" // so notify-send won't threat this as a flag
             continue
         }
 
-        trueBody = trueBody + "\n" + copyOfLine
+        message = message  + line + "\n"
     }
 
     if (onlyInCommandLine) {
-        println(trueBody)
+        println(message)
     } else {
         val icon = File(config.iconPath)
         val command = try {
 
             if (icon.exists()) {
-                arrayOf("notify-send", "-i", icon.absolutePath, head, trueBody)
+                arrayOf("notify-send", "-i", icon.absolutePath, header, message)
             } else {
-                arrayOf("notify-send", head, trueBody)
+                arrayOf("notify-send", header, message)
             }
 
         } catch (e: Exception) {
             arrayOf("notify-send", "Error :(", "Pleas check config file, it is probably damaged or missing.")
         }
 
-//        command.forEach { println(it) } // TESTING
         Runtime.getRuntime().exec(command)
     }
 }
