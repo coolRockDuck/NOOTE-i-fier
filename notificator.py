@@ -1,7 +1,7 @@
 import os
 import sys
 
-search_for: str = None
+searched_phrase: str = ""
 wants_help: bool = False
 only_cmd: bool = False
 
@@ -26,25 +26,14 @@ def main():
 
     if wants_help:
         show_help()
-    elif search_for is None:
+    elif searched_phrase == "":
         show_notes()
     else:
         show_note_with()
 
 
-# def _get_todo_file(path: str) -> list:
-#     entries = _get_all_notes(path)
-#     for entry in entries:
-#         with open(entry) as content_file:
-#             lines = content_file.readlines()
-#             if "TODO" in lines[0]:
-#                 # removing first line to avoid having "TODO" in header and content
-#                 lines.pop(0)
-#                 return lines
-
-
 def _set_args():
-    global only_cmd, wants_help, search_for
+    global only_cmd, wants_help, searched_phrase
     args = sys.argv
     if len(args) > 1:
         first_arg = args[1]
@@ -55,13 +44,13 @@ def _set_args():
                 wants_help = True
 
         else:
-            search_for = first_arg
+            searched_phrase = first_arg
 
         if len(args) > 2:
-            search_for = args[2]
+            searched_phrase = args[2]
 
     if len(sys.argv) > 2 and sys.argv[2] is not None:
-        search_for = sys.argv[2]
+        searched_phrase = sys.argv[2]
 
 
 def show_note_with():
@@ -70,12 +59,12 @@ def show_note_with():
     for note in notes:
         lines = open(note, 'r').readlines()
         for line in lines:
-            if search_for in line:
+            if searched_phrase.lower() in line.lower():  # lower() function makes checking case insensitive
                 notes_with_phrase.append(note)
 
     for note in notes_with_phrase:
-        formated_content = _format_content(_get_note_content(note))
-        notify(formated_content)
+        formatted_content = _format_content(_get_note_content(note))
+        notify(formatted_content)
 
 
 def _get_all_notes() -> list:
@@ -102,13 +91,13 @@ def show_help():
 def show_notes():
     notes = _get_all_notes()
     for note in notes:
-        formated_content = _format_content(_get_note_content(note))
-        notify(formated_content)
+        formatted_content = _format_content(_get_note_content(note))
+        notify(formatted_content)
 
 
-def _format_content(unform_content: list) -> str:
+def _format_content(unformatted_content: list) -> str:
     form_content = ""
-    for line in unform_content:
+    for line in unformatted_content:
         if line == "\n" or line == " ":
             continue
         form_content = form_content + "\n" + line.strip()
