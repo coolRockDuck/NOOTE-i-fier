@@ -1,6 +1,11 @@
 import os
 import sys
 
+# Constants
+_USER_CONFIG_DIRECTORY_PATH = os.environ["HOME"] + "/.config"
+_NOTIFICATOR_CONFIG_DIRECTORY_PATH = _USER_CONFIG_DIRECTORY_PATH + "/notificator"
+_CONFIG_FILE_PATH = _NOTIFICATOR_CONFIG_DIRECTORY_PATH + "/config"
+
 searched_phrase: str = ""
 wants_help: bool = False
 only_cmd: bool = False
@@ -69,14 +74,11 @@ def show_note_with():
 
 def _get_all_notes() -> list:
     all_notes = []
-    home_path = os.environ["HOME"]
-    xpad_path = home_path + "/.config" + "/xpad/"
 
-    with os.scandir(xpad_path) as entries:
+    with os.scandir(_USER_CONFIG_DIRECTORY_PATH + "/xpad") as entries:
         for entry in entries:
             if entry.is_file() and "content" in entry.name:
                 all_notes.append(entry)
-
     return all_notes
 
 
