@@ -15,17 +15,18 @@ only_cmd: bool = False
 help_msg = f"""{_NAME_OF_SCRIPT} - script  created for showing content of xpad notes
                 as notifications or command line messages.  
                    How to use:
+                    ./NOOTE-i-fier.sh [FLAGS] [PHRASE_FOR_SEARCH or PATH_TO_ICON]
                     Add phrase after flags to search in notes for it.   
-                    {_NAME_OF_SCRIPT} [FLAGS] [PHRASE_FOR_SEARCH or PATH_TO_ICON]
                    Flags:,
                        -c show content only in command line
                        -h show help
                        -i  set path to a icon which will be shown in the notifications
                         After running script with this flag you should 
-                        rerun without it to see normal notification with icon.
+                        rerun without it to see normal notification with the new icon.
                    Config:
                       Go to .config/{_NAME_OF_SCRIPT} to edit config file.
-                      You can there set or change icon of the notifications"""
+                      You can there set or change icon of the notifications
+                    Requirements: python3"""
 
 
 def main():
@@ -164,7 +165,7 @@ def _create_config() -> bool:
 
 def set_icon_path(icon_path: str):
     _create_config()
-    notify(f"Setting new icon path to: {icon_path}", "\nRun script again without -f flag and path.")
+    notify(f"Setting new icon path to: {icon_path}", "\nRun script again without -i flag and path.")
     with open(_NOTIFICATOR_CONFIG_DIRECTORY_PATH + "/config", 'w') as conf_file:
         conf_file.write(icon_path)
 
