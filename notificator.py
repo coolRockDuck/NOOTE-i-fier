@@ -2,8 +2,9 @@ import os
 import sys
 
 # Constants
+_NAME_OF_SCRIPT = "xnotify"
 _USER_CONFIG_DIRECTORY_PATH = os.environ["HOME"] + "/.config"
-_NOTIFICATOR_CONFIG_DIRECTORY_PATH = _USER_CONFIG_DIRECTORY_PATH + "/notificator"
+_NOTIFICATOR_CONFIG_DIRECTORY_PATH = _USER_CONFIG_DIRECTORY_PATH + "/" + _NAME_OF_SCRIPT
 _CONFIG_FILE_PATH = _NOTIFICATOR_CONFIG_DIRECTORY_PATH + "/config"
 
 new_icon_path: str = ""
@@ -11,20 +12,20 @@ searched_phrase: str = ""
 wants_help: bool = False
 only_cmd: bool = False
 
-help_msg = """This script is created to show content of xpad notes
+help_msg = f"""{_NAME_OF_SCRIPT} - script  created for showing content of xpad notes
                 as notifications or command line messages.  
                    How to use:
-                   xpad_notify <FLAGS> <PHRASE_FOR_SEARCH>
+                    Add phrase after flags to search in notes for it.   
+                    {_NAME_OF_SCRIPT} [FLAGS] [PHRASE_FOR_SEARCH or PATH_TO_ICON]
                    Flags:,
-                       -c show notes only in command line
+                       -c show content only in command line
                        -h show help
-                        Add phrase after flags to search in notes for it     
+                       -i  set path to a icon which will be shown in the notifications
+                        After running script with this flag you should 
+                        rerun without it to see normal notification with icon.
                    Config:
-                      Go to .config/Notificator to edit config file.
-                      You can set or change icon of the notification,
-                      change path to where xpad is storing notes,
-                      minimal length of notification 
-                      and how much notification will be elongated."""
+                      Go to .config/{_NAME_OF_SCRIPT} to edit config file.
+                      You can there set or change icon of the notifications"""
 
 
 def main():
@@ -53,7 +54,7 @@ def _set_args():
                 if len(args) > 2:
                     new_icon_path = args[2]
                 else:
-                    print("No path specified")
+                    notify("No path specified")
             if "c" in first_arg:
                 only_cmd = True
             if "h" in first_arg:
@@ -67,6 +68,7 @@ def _set_args():
 
 
 def show_note_with():
+    print(f"Searching in notes for: '{searched_phrase}'")
     notes = _get_all_notes()
     notes_with_phrase = []
     for note in notes:
@@ -116,7 +118,7 @@ def _format_content(unformatted_content: list) -> str:
     return form_content
 
 
-def notify(content, header: str = "Notificator"):  # optional parameter cant be first
+def notify(content, header: str = _NAME_OF_SCRIPT):  # optional parameter cant be first
     if only_cmd:
         _print_notification(header, content)
     else:
@@ -142,8 +144,6 @@ def get_icon_path() -> str:
     if not _create_config():
         with open(file_path) as conf_file:
             icon_path = conf_file.readline()
-    else:
-        print(f"Empty config file in {file_path}")
 
     return icon_path
 
@@ -156,7 +156,7 @@ def _create_config() -> bool:
         if not os.path.exists(_NOTIFICATOR_CONFIG_DIRECTORY_PATH):
             os.mkdir(_NOTIFICATOR_CONFIG_DIRECTORY_PATH)
         open(config_file_path, "w")  # creating empty file
-        print(f"Creating config file in: {config_file_path}")
+        notify(f"Creating config file in: {config_file_path}")
         created_new_file = True
 
     return created_new_file
@@ -164,7 +164,7 @@ def _create_config() -> bool:
 
 def set_icon_path(icon_path: str):
     _create_config()
-    print(f"Setting new icon path to: {icon_path}", "\nRun script again without -f flag and path.")
+    notify(f"Setting new icon path to: {icon_path}", "\nRun script again without -f flag and path.")
     with open(_NOTIFICATOR_CONFIG_DIRECTORY_PATH + "/config", 'w') as conf_file:
         conf_file.write(icon_path)
 
