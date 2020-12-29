@@ -2,7 +2,7 @@ import os
 import sys
 
 # Constants
-_NAME_OF_SCRIPT = "NOOTE-i-fier"
+_NAME_OF_SCRIPT = "NOTE-ti-fier"
 _USER_CONFIG_DIRECTORY_PATH = os.environ["HOME"] + "/.config"
 _NOTIFICATOR_CONFIG_DIRECTORY_PATH = _USER_CONFIG_DIRECTORY_PATH + "/" + _NAME_OF_SCRIPT
 _CONFIG_FILE_PATH = _NOTIFICATOR_CONFIG_DIRECTORY_PATH + "/config"
@@ -15,7 +15,7 @@ only_cmd: bool = False
 help_msg = f"""{_NAME_OF_SCRIPT} - script  created for showing content of xpad notes
                 as notifications or command line messages.  
                    How to use:
-                    ./NOOTE-i-fier.sh [FLAGS] [PHRASE_FOR_SEARCH or PATH_TO_ICON]
+                    ./notetifier.sh [FLAGS] [PHRASE_FOR_SEARCH or PATH_TO_ICON]
                     Add phrase after flags to search in notes for it.   
                    Flags:,
                        -c show content only in command line
@@ -77,6 +77,9 @@ def show_note_with():
         for line in lines:
             if searched_phrase.lower() in line.lower():  # lower() function makes checking case insensitive
                 notes_with_phrase.append(note)
+                print(f"Found {searched_phrase} in {line}")
+                break  # this prevent adding the same note multiple times
+                # if multiple lines in the same note contains the searched_phrase
 
     for note in notes_with_phrase:
         formatted_content = _format_content(_get_note_content(note))
